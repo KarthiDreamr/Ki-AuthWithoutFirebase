@@ -1,10 +1,7 @@
-import 'package:auth/dayscholar.dart';
+import 'package:auth/userPage.dart';
 import 'package:auth/error_page.dart';
 import 'package:auth/home_page.dart';
 import 'package:flutter/material.dart';
-import 'package:auth/admin_page.dart';
-import 'package:auth/mentor_page.dart';
-import 'package:auth/student_page.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 void main() {
@@ -23,13 +20,13 @@ class _MyAppState extends State<MyApp> {
 
   Widget pageSwitch(String userType) {
     if (userType == "admin") {
-      return const KiAdminPage();
+      return const UserPage(userType: "Admin Page");
     } else if (userType == "Hostel student") {
-      return const KiStudentPage();
+      return const UserPage(userType: "Hostel Student Page");
     } else if (userType == "Hostel Mentor") {
-      return const KiMentorPage();
+      return const UserPage(userType: "Hostel Mentor Page");
     } else if (userType == "Dayscholar student") {
-      return const KiDayScholar();
+      return const UserPage(userType: "Day-scholar Student Page");
     } else if (userType == "firstLogin") {
       return const HomePage();
     } else {
@@ -62,7 +59,10 @@ class _MyAppState extends State<MyApp> {
             print("stateSnapshot.hasError ${stateSnapshot.connectionState}");
             return const KiErrorPage();
           }
-          return const CircularProgressIndicator();
+          return Scaffold(
+            appBar: AppBar(title: const Text("Loading.."),),
+              body: const CircularProgressIndicator()
+          );
         },
       ),
     );
