@@ -18,11 +18,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
   void storeState(String userType) async {
     await widget.storage.write(key: "userType", value: userType);
   }
 
   void pageSwitch(String userType, bool write) {
+
     if (write) {
       storeState(userType);
     }
@@ -47,43 +49,124 @@ class _HomePageState extends State<HomePage> {
         context,
         MaterialPageRoute(builder: (context) => const UserPage(userType: "Day-scholar Student Page")),
       );
-    } else {
+    }
+    else if (userType == "Dayscholar student") {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const UserPage(userType: "Day-scholar Student Page")),
+      );
+    }
+    else {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const KiErrorPage()),
       );
     }
+
   }
 
-  Future singInFun() async {
-    var gresponse = await GoogleSignIn().signIn();
-    print(gresponse);
+  // List<String> pageName = [];
 
-    var request = http.MultipartRequest(
-        'POST', Uri.parse('https://dev-checkin.kct.ac.in/api/login/'));
+  void GsignIn() async {
+    try{
+      GoogleSignInAccount? googleSignInAccount = await GoogleSignIn().signIn();
+      if(googleSignInAccount==null){
+        // await GoogleSignIn().signOut();
+        errorDialogPopup();
+        return;
+      }
+      print('--------------------');
+      print(googleSignInAccount.email);
+      print('--------------------');
 
-    request.fields.addAll({'email': email});
+      var request = http.MultipartRequest(
+          'POST', Uri.parse('https://dev-checkin.kct.ac.in/api/login/'));
 
-    /*
+      request.fields.addAll({'email': googleSignInAccount.email});
+
+
+      http.StreamedResponse response = await request.send();
+
+      if (response.statusCode == 200) {
+        var responseString = await response.stream.bytesToString();
+        print("Response from Endpoint $responseString");
+        var responseJson = json.decode(responseString);
+        var userType = responseJson["authenticated successfully"];
+        print("User Type is $userType");
+
+        if(userType!=null){
+          userType ??= "Error";
+          pageSwitch(userType, true);
+
+          print("hello Google");
+        }
+        else{
+          errorDialogPopup();
+        }
+
+
+
+      } else {
+        print("Custom Error Response: ${response.reasonPhrase} ");
+      }
+
+    }
+    catch(e) {
+      print("Error Occoured $e");
+    }
+
+  }
+
+  Future staticLogin() async {
+    try {
+
+      var request = http.MultipartRequest(
+          'POST', Uri.parse('https://dev-checkin.kct.ac.in/api/login/'));
+
+      request.fields.addAll({'email': email});
+
+      /*
     testhostelstudent@gmail.com
     test_mentor@gmail.com
     test_hostel_admin@gmail.com
     test_dayscholar@gmail.com
     */
 
-    http.StreamedResponse response = await request.send();
+      http.StreamedResponse response = await request.send();
 
-    if (response.statusCode == 200) {
-      var responseString = await response.stream.bytesToString();
-      print("Response from Endpoint $responseString");
-      var responseJson = json.decode(responseString);
-      var userType = responseJson["authenticated successfully"];
-      print("User Type is $userType");
+      if (response.statusCode == 200) {
+        var responseString = await response.stream.bytesToString();
+        print("Response from Endpoint $responseString");
+        var responseJson = json.decode(responseString);
+        var userType = responseJson["authenticated successfully"];
+        print("User Type is $userType");
 
-      pageSwitch(userType, true);
-    } else {
-      print("Custom Error Response: ${response.reasonPhrase} ");
+        pageSwitch(userType, true);
+        print("hello");
+      } else {
+        print("Custom Error Response: ${response.reasonPhrase} ");
+      }
     }
+    catch(e){
+      print("Error Occoured $e");
+    }
+  }
+  void errorDialogPopup(){
+     showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("UnRegistered User"),
+        content: const Text("The email is not registered"),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: const Text("Close")
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -117,10 +200,18 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             ElevatedButton.icon(
-              onPressed: singInFun,
+              onPressed: staticLogin,
               icon: const Icon(Icons.abc),
-              label: const Text("Google Auth"),
+              label: const Text("Log in"),
             ),
+           const SizedBox(
+             height: 20,
+           ),
+            ElevatedButton.icon(
+              onPressed: GsignIn,
+              icon: Image.asset('assets/google-logo.png',scale: 8,),
+              label: const Text("Google Sign In"),
+            )
           ],
         ),
       ),
